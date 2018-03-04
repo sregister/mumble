@@ -113,6 +113,9 @@ void LogConfig::load(const Settings &r) {
 	loadSlider(qsVolume, r.iTTSVolume);
 	qsbThreshold->setValue(r.iTTSThreshold);
 	qcbReadBackOwn->setChecked(r.bTTSMessageReadBack);
+	qcbNoScope->setChecked(r.bTTSNoScope);
+	qcbNoAuthor->setChecked(r.bTTSNoAuthor);
+
 #endif
 	qcbWhisperFriends->setChecked(r.bWhisperFriends);
 }
@@ -144,6 +147,8 @@ void LogConfig::save() const {
 	s.iTTSVolume=qsVolume->value();
 	s.iTTSThreshold=qsbThreshold->value();
 	s.bTTSMessageReadBack = qcbReadBackOwn->isChecked();
+	s.bTTSNoScope = qcbNoScope->isChecked();
+	s.bTTSNoAuthor = qcbNoAuthor->isChecked();
 #endif
 	s.bWhisperFriends = qcbWhisperFriends->isChecked();
 }
@@ -451,7 +456,7 @@ QString Log::validHtml(const QString &html, QTextCursor *tc) {
 	}
 }
 
-void Log::log(MsgType mt, const QString &console, const QString &terse, bool ownMessage) {
+void Log::log(MsgType mt, const QString &console, const QString &terse, bool ownMessage, QString shortTTS) {
 	QDateTime dt = QDateTime::currentDateTime();
 
 	int ignore = qmIgnore.value(mt);
@@ -537,6 +542,10 @@ void Log::log(MsgType mt, const QString &console, const QString &terse, bool own
 	if (g.s.bDeaf || !g.s.bTTS || !(flags & Settings::LogTTS)) {
 		return;
 	}
+
+	//If shortTTS is not null then replace the message
+	if (!shortTTS.isNull())
+		plain = shortTTS;
 
 	// Apply simplifications to spoken text
 	QRegExp identifyURL(QLatin1String("[a-z-]+://[^ <]*"),
